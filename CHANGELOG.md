@@ -48,15 +48,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example data files
 - .gitignore configuration
 
-## [0.1.0] - TBD
+## [0.2.0] - 2025-01-17
+
+Major feature release with comprehensive built-in function library, advanced query features, and token comparison tool.
+
+### Added - Query Engine Functions
+- **String utilities**: `tostring()`, `tonumber()`, `ltrimstr()`, `rtrimstr()`
+- **Object transformations**: `to_entries()`, `from_entries()`, `with_entries()`
+- **Math functions**: `add()`, `min()`, `max()`, `floor()`, `ceil()`, `round()`
+- **Array utilities**: `unique()`, `flatten()`, `flatten(depth)`, `range()`, `first()`, `first(n)`, `last()`, `last(n)`
+- **Range generation**: `range(n)`, `range(from;to)`, `range(from;to;step)`
+- **34 built-in functions** total (up from 16)
+
+### Added - Query Syntax Features
+- **Object construction**: `{key: value}` and shorthand `{name, age}`
+- **Array construction**: `[expr]` for collecting results
+- **Complex expressions**: Support for `[.users[] | {name, age}]`
+- **Nested object/array construction** with proper precedence handling
+
+### Added - CLI Features
+- **`--slurp` mode**: Read multiple JSON/YAML/TOON values into a single array
+- **`--null-input` mode**: Run queries without reading input (useful with `range()` and generators)
+- **`--compare` flag**: Show format comparison (JSON/YAML/TOON sizes and token savings)
+  - Displays all three format sizes side-by-side
+  - Shows estimated token counts for each format
+  - Calculates percentage savings or increase
+  - Perfect for demonstrating TOON's token efficiency
+
+### Improved
+- **Parser precedence**: Fixed order of operations for construction operators
+- **Query engine**: Better handling of nested structures and complex expressions
+- **Error messages**: More descriptive errors for query parsing issues
+- Comprehensive test coverage for all built-in functions
+- Updated documentation with all function examples
+
+### Fixed
+- Array construction with pipes now works correctly (`[.users[] | select(.active)]`)
+- Object construction respects nested structures in comma splitting
+- Precedence issue where pipes inside brackets were parsed incorrectly
+
+### Known Limitations
+- Deep nesting with parentheses in object construction may cause stack overflow
+- Boolean field access in `select()` requires comparison operators (use `.active == true`)
+
+### Tests
+- Added 7 string/object transformation function tests
+- Added 6 math function tests (add, min, max, floor, ceil, round)
+- Added 10 array utility tests (unique, flatten variants, range variants, first/last variants)
+- Added object/array construction integration tests
+- All 30+ tests pass
+
+## [0.1.0] - 2025-01-17
 
 Initial alpha release.
 
 ### Features
-- TOON format support
-- Basic query engine
-- Format conversion
-- CLI interface
+- TOON format support with encoder/decoder
+- Basic query engine with 16 essential functions
+- Format conversion (JSON ↔ YAML ↔ TOON)
+- CLI interface with comprehensive flags
+- Field access, array indexing, array iteration
+- Pipe operations and select/filter
+- Core functions: length, keys, values, type, sort, reverse
+- Array operations: map, sort_by, group_by
+- String functions: split, join, startswith, endswith, contains
+- Object functions: has, in
 
 ---
 

@@ -57,6 +57,15 @@ echo '{"users":[{"name":"Alice","age":30}]}' | tq -i json '.users[] | select(.ag
 
 # Pretty-print TOON
 tq '.' data.toon
+
+# Read multiple JSON objects into array (slurp mode)
+echo -e '{"id":1}\n{"id":2}\n{"id":3}' | tq --slurp '.'
+
+# Generate data without input (null-input mode)
+tq --null-input 'range(10)'
+
+# Compare format sizes (show token savings)
+tq --compare -i json -o toon data.json
 ```
 
 ### Format Conversion
@@ -115,34 +124,58 @@ tq '[.items[] | .name]'
 ### Transformations
 
 ```bash
-# Create new objects
+# Create new objects (basic support)
 tq '{name: .user, total: .amount}'
 
 # Multiple outputs
 tq '.users[] | {id, name}'
-
-# Conditional logic
-tq 'if .age > 18 then "adult" else "minor" end'
 ```
 
-### Functions
+### Built-in Functions
 
 ```bash
-# Built-in functions
-tq 'length'
-tq 'keys'
-tq 'values'
-tq 'sort'
-tq 'unique'
-tq 'reverse'
+# Array/Object functions
+tq '. | length()'              # Get length
+tq '. | keys()'                # Get object keys or array indices
+tq '. | values()'              # Get object values
+tq '. | type()'                # Get type (array, object, string, number, boolean, null)
 
-# Type checks
-tq 'type'
-tq 'has("field")'
+# Array operations
+tq '. | sort()'                # Sort array
+tq '. | reverse()'             # Reverse array
+tq '. | unique()'              # Get unique elements
+tq '. | flatten()'             # Flatten array (depth 1)
+tq '. | flatten(2)'            # Flatten array to depth 2
+tq '. | first()'               # Get first element
+tq '. | first(3)'              # Get first 3 elements
+tq '. | last()'                # Get last element
+tq '. | last(2)'               # Get last 2 elements
+tq '. | map(.name)'            # Map expression over array
+tq '. | sort_by(.age)'         # Sort array by field
+tq '. | group_by(.category)'   # Group array by field
 
-# String operations
-tq '.name | ascii_upcase'
-tq '.text | split(",")'
+# Math functions
+tq '. | add()'                 # Sum all numbers in array
+tq '. | min()'                 # Find minimum value
+tq '. | max()'                 # Find maximum value
+tq '. | floor()'               # Round down
+tq '. | ceil()'                # Round up
+tq '. | round()'               # Round to nearest integer
+
+# Range generation
+tq 'range(5)'                  # Generate [0,1,2,3,4]
+tq 'range(2;5)'                # Generate [2,3,4]
+tq 'range(0;10;2)'             # Generate [0,2,4,6,8]
+
+# String functions
+tq '. | split(",")'            # Split string by delimiter
+tq '. | join(" ")'             # Join array with delimiter
+tq '. | startswith("prefix")'  # Check if starts with string
+tq '. | endswith("suffix")'    # Check if ends with string
+tq '. | contains("substring")' # Check if contains string
+
+# Object operations
+tq '. | has("field")'          # Check if object has key
 ```
 
 ## Command-Line Options
@@ -162,7 +195,8 @@ Options:
       --indent N                Indentation spaces (default: 2)
       --tab                     Use tabs for indentation
       --delimiter CHAR          TOON delimiter character (default: ,)
-      --stats                   Show token usage statistics
+      --stats                   Show token usage statistics (JSON vs TOON)
+      --compare                 Show format comparison (JSON/YAML/TOON sizes)
   -h, --help                    Show this help message
   -v, --version                 Show version information
 
@@ -186,9 +220,18 @@ Query Syntax:
 Reduce token costs when passing structured data to LLMs:
 
 ```bash
-# Convert large JSON dataset to TOON before sending to LLM
-tq -i json -o toon --stats large-dataset.json
-# Token reduction: 42% (estimated)
+# Convert large JSON dataset to TOON and see the savings
+tq -i json -o toon --compare large-dataset.json
+
+# Example output:
+# --- Format Comparison ---
+# JSON:  338 bytes (84 tokens estimated)
+# YAML:  360 bytes (90 tokens estimated)
+# TOON:  234 bytes (58 tokens estimated)
+#
+# Input:  JSON (84 tokens)
+# Output: TOON (58 tokens)
+# Token savings: 31.0%
 ```
 
 ### 2. Configuration Management
