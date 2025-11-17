@@ -1,0 +1,420 @@
+.TH TQ 1 "2025-01-17" "tq 0.2.0" "User Commands"
+.SH NAME
+tq \- TOON query tool for querying and transforming structured data
+.SH SYNOPSIS
+.B tq
+[\fIOPTIONS\fR] [\fIQUERY\fR] [\fIFILES\fR...]
+.SH DESCRIPTION
+.B tq
+is a command-line tool for querying and transforming structured data using the TOON (Token-Oriented Object Notation) format, with feature parity to
+.BR jq (1)
+and
+.BR yq (1).
+.PP
+TOON reduces token usage by 30-60% compared to JSON while maintaining readability and structure, making it perfect for LLM workflows and token-sensitive applications.
+.SH OPTIONS
+.SS "Input/Output Options"
+.TP
+.BR \-i ", " \-\-input\-format =\fIFORMAT\fR
+Input format: auto, json, yaml, toon (default: auto)
+.TP
+.BR \-o ", " \-\-output\-format =\fIFORMAT\fR
+Output format: toon, json, yaml (default: toon)
+.TP
+.BR \-r ", " \-\-raw\-output
+Output raw text, not TOON/JSON strings
+.TP
+.BR \-c ", " \-\-compact\-output
+Compact output (no pretty-printing)
+.SS "Input Processing Options"
+.TP
+.BR \-s ", " \-\-slurp
+Read entire input into single array
+.TP
+.BR \-n ", " \-\-null\-input
+Don't read input, use null as input
+.SS "Query Options"
+.TP
+.BR \-e ", " \-\-exit\-status
+Set exit code based on output
+.TP
+.BR \-f ", " \-\-from\-file =\fIFILE\fR
+Read query from file
+.SS "TOON-Specific Options"
+.TP
+.BR \-\-indent =\fIN\fR
+Indentation spaces (default: 2)
+.TP
+.BR \-\-tab
+Use tabs for indentation
+.TP
+.BR \-\-delimiter =\fICHAR\fR
+TOON delimiter character (default: ,)
+.TP
+.BR \-\-stats
+Show token usage statistics (JSON vs TOON)
+.TP
+.BR \-\-compare
+Show format comparison (JSON/YAML/TOON sizes and token savings)
+.SS "General Options"
+.TP
+.BR \-h ", " \-\-help
+Show help message
+.TP
+.BR \-v ", " \-\-version
+Show version information
+.SH QUERY SYNTAX
+.SS "Basic Selectors"
+.TP
+.B .
+Identity (pass-through, pretty-print)
+.TP
+.B .field
+Access field
+.TP
+.B .field.nested
+Access nested field
+.TP
+.B .[0]
+Array index (zero-based)
+.TP
+.B .[-1]
+Last element (negative indexing)
+.SS "Array Operations"
+.TP
+.B .[]
+Array/object iterator
+.TP
+.B .items[]
+Iterate array elements
+.TP
+.B [.items[] | .name]
+Collect results into array
+.SS "Pipe Operations"
+.TP
+.B expr | expr
+Pipe (chain operations)
+.TP
+.B select(condition)
+Filter by condition
+.SS "Object and Array Construction"
+.TP
+.B {key: value}
+Construct object with expressions
+.TP
+.B {name, age}
+Construct object with shorthand (equivalent to {name: .name, age: .age})
+.TP
+.B [expr]
+Construct array from expression results
+.SH BUILT-IN FUNCTIONS
+.SS "Array/Object Functions"
+.TP
+.B length()
+Get length of array or object
+.TP
+.B keys()
+Get object keys or array indices
+.TP
+.B values()
+Get object values
+.TP
+.B type()
+Get type (array, object, string, number, boolean, null)
+.SS "Array Operations"
+.TP
+.B sort()
+Sort array
+.TP
+.B reverse()
+Reverse array
+.TP
+.B unique()
+Get unique elements
+.TP
+.B flatten()
+Flatten array (depth 1)
+.TP
+.B flatten(depth)
+Flatten array to specified depth
+.TP
+.B first()
+Get first element
+.TP
+.B first(n)
+Get first n elements
+.TP
+.B last()
+Get last element
+.TP
+.B last(n)
+Get last n elements
+.TP
+.B map(expr)
+Map expression over array
+.TP
+.B sort_by(expr)
+Sort array by expression
+.TP
+.B group_by(expr)
+Group array by expression
+.SS "Math Functions"
+.TP
+.B add()
+Sum all numbers in array
+.TP
+.B min()
+Find minimum value
+.TP
+.B max()
+Find maximum value
+.TP
+.B floor()
+Round down to integer
+.TP
+.B ceil()
+Round up to integer
+.TP
+.B round()
+Round to nearest integer
+.SS "Range Generation"
+.TP
+.B range(n)
+Generate array [0,1,2,...,n-1]
+.TP
+.B range(from;to)
+Generate array [from,from+1,...,to-1]
+.TP
+.B range(from;to;step)
+Generate array with step
+.SS "String Functions"
+.TP
+.B tostring()
+Convert to string
+.TP
+.B tonumber()
+Convert to number
+.TP
+.B split(delimiter)
+Split string by delimiter
+.TP
+.B join(delimiter)
+Join array with delimiter
+.TP
+.B startswith(prefix)
+Check if starts with string
+.TP
+.B endswith(suffix)
+Check if ends with string
+.TP
+.B contains(substring)
+Check if contains string
+.TP
+.B ltrimstr(prefix)
+Remove prefix from string
+.TP
+.B rtrimstr(suffix)
+Remove suffix from string
+.SS "Object Functions"
+.TP
+.B has(key)
+Check if object has key
+.TP
+.B in(object)
+Check if key exists in object
+.TP
+.B to_entries()
+Convert object to array of {key, value} objects
+.TP
+.B from_entries()
+Convert array of {key, value} objects to object
+.TP
+.B with_entries(expr)
+Transform object entries
+.SH EXAMPLES
+.SS "Basic Usage"
+Query TOON data:
+.PP
+.nf
+.RS
+tq '.users[0].name' data.toon
+.RE
+.fi
+.SS "Format Conversion"
+Convert JSON to TOON:
+.PP
+.nf
+.RS
+tq -i json -o toon data.json
+.RE
+.fi
+.PP
+Convert YAML to TOON:
+.PP
+.nf
+.RS
+tq -i yaml -o toon config.yaml
+.RE
+.fi
+.SS "Query and Transform"
+Filter with select:
+.PP
+.nf
+.RS
+echo '{"users":[{"name":"Alice","age":30}]}' | tq '.users[] | select(.age > 25)'
+.RE
+.fi
+.PP
+Object construction:
+.PP
+.nf
+.RS
+tq '.users[] | {name, age}' data.json
+.RE
+.fi
+.PP
+Array construction:
+.PP
+.nf
+.RS
+tq '[.users[].name]' data.json
+.RE
+.fi
+.SS "Token Comparison"
+Show format comparison and savings:
+.PP
+.nf
+.RS
+tq --compare -i json -o toon data.json
+.RE
+.fi
+.PP
+Example output:
+.PP
+.nf
+.RS
+--- Format Comparison ---
+JSON:  338 bytes (84 tokens estimated)
+YAML:  360 bytes (90 tokens estimated)
+TOON:  234 bytes (58 tokens estimated)
+
+Input:  JSON (84 tokens)
+Output: TOON (58 tokens)
+Token savings: 31.0%
+.RE
+.fi
+.SS "Slurp Mode"
+Read multiple JSON objects into array:
+.PP
+.nf
+.RS
+echo -e '{"id":1}\\n{"id":2}\\n{"id":3}' | tq --slurp '.'
+.RE
+.fi
+.SS "Null-Input Mode"
+Generate data without input:
+.PP
+.nf
+.RS
+tq --null-input 'range(10)'
+.RE
+.fi
+.SS "Using Built-in Functions"
+Math operations:
+.PP
+.nf
+.RS
+echo '[1,2,3,4,5]' | tq 'add()'
+echo '[5,2,8,1]' | tq 'min()'
+.RE
+.fi
+.PP
+String operations:
+.PP
+.nf
+.RS
+echo '"hello,world"' | tq 'split(",")'
+echo '["hello","world"]' | tq 'join(" ")'
+.RE
+.fi
+.PP
+Object transformations:
+.PP
+.nf
+.RS
+echo '{"a":1,"b":2}' | tq 'to_entries()'
+.RE
+.fi
+.SH TOON FORMAT
+TOON (Token-Oriented Object Notation) uses a compact representation optimized for token efficiency:
+.SS "Objects"
+.PP
+.nf
+.RS
+id: 123
+name: Ada
+active: true
+.RE
+.fi
+.SS "Nested Objects"
+.PP
+.nf
+.RS
+user:
+  id: 123
+  name: Ada
+.RE
+.fi
+.SS "Primitive Arrays"
+.PP
+.nf
+.RS
+tags[3]: admin,ops,dev
+.RE
+.fi
+.SS "Tabular Arrays"
+Uniform objects in compact table format:
+.PP
+.nf
+.RS
+items[2]{sku,qty,price}:
+  A1,2,9.99
+  B2,1,14.5
+.RE
+.fi
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+General error or query failure
+.TP
+.B 1
+Exit status mode (-e) and result is false/nil
+.SH ENVIRONMENT
+No special environment variables are used.
+.SH FILES
+.TP
+.I .golangci.yml
+Configuration file for golangci-lint (development)
+.TP
+.I .pre-commit-config.yaml
+Pre-commit hooks configuration (development)
+.SH SEE ALSO
+.BR jq (1),
+.BR yq (1),
+.BR json (5),
+.BR yaml (5)
+.PP
+Project homepage: https://github.com/ssccio/tq
+.PP
+TOON format specification: https://github.com/toon-format/toon
+.SH AUTHOR
+Written for the tq project.
+.SH COPYRIGHT
+Copyright \(co 2025. License: MIT.
+.br
+This is free software: you are free to change and redistribute it.
+.SH BUGS
+Report bugs to: https://github.com/ssccio/tq/issues

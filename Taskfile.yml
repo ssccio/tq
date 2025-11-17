@@ -29,6 +29,20 @@ tasks:
     cmds:
       - go install -ldflags "-X main.version={{.VERSION}} -X main.commit={{.COMMIT}} -X main.date={{.BUILD_DATE}}" ./cmd/tq
 
+  install-man:
+    desc: Install man page to /usr/local/share/man/man1
+    cmds:
+      - mkdir -p /usr/local/share/man/man1
+      - cp docs/man/tq.1 /usr/local/share/man/man1/
+      - chmod 644 /usr/local/share/man/man1/tq.1
+      - echo "Man page installed. Try 'man tq'"
+
+  uninstall-man:
+    desc: Uninstall man page
+    cmds:
+      - rm -f /usr/local/share/man/man1/tq.1
+      - echo "Man page uninstalled"
+
   test:
     desc: Run tests
     cmds:
