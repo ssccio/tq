@@ -1,0 +1,29 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "role": "admin",
+      "lastLogin": "2025-01-15T10:30:00Z",
+      "active": true
+    },
+    {
+      "id": 2,
+      "name": "Bob",
+      "role": "user",
+      "lastLogin": "2025-01-14T15:22:00Z",
+      "active": true
+    },
+    {
+      "id": 3,
+      "name": "Charlie",
+      "role": "user",
+      "lastLogin": "2025-01-13T09:45:00Z",
+      "active": false
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "generated": "2025-01-15T12:00:00Z"
+  }
+}

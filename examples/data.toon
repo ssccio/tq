@@ -1,0 +1,7 @@
+users[3]{id,name,role,lastLogin,active}:
+  1,Alice,admin,2025-01-15T10:30:00Z,true
+  2,Bob,user,2025-01-14T15:22:00Z,true
+  3,Charlie,user,2025-01-13T09:45:00Z,false
+metadata:
+  version: 1.0
+  generated: 2025-01-15T12:00:00Z
