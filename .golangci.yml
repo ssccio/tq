@@ -1,23 +1,24 @@
 # golangci-lint configuration for tq
 # Run: golangci-lint run
+# Version: v2.6.1+
+
+version: "2"
 
 run:
   timeout: 5m
-  tests: true
-  build-tags: []
 
 linters:
+  # Default linters are enabled: errcheck, govet, ineffassign, staticcheck, unused
   enable:
-    - errcheck      # Check for unchecked errors
-    - gosimple      # Simplify code
-    - govet         # Vet examines Go source code
-    - ineffassign   # Detect ineffectual assignments
-    - staticcheck   # Static analysis
-    - unused        # Check for unused constants, variables, functions and types
-    - gofmt         # Check formatting
-    - goimports     # Check imports
     - misspell      # Check for misspelled words
     - revive        # Drop-in replacement for golint
+    - godot         # Check if comments end in a period
+    - errname       # Check error naming conventions
+
+formatters:
+  enable:
+    - gofmt         # Go formatter
+    - goimports     # Imports formatter
 
 linters-settings:
   errcheck:
@@ -25,12 +26,14 @@ linters-settings:
     check-blank: true
 
   govet:
-    check-shadowing: true
+    settings:
+      shadow:
+        strict: true
 
+formatters-settings:
   gofmt:
     simplify: true
 
 issues:
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
