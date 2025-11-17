@@ -32,9 +32,9 @@ tasks:
   install-man:
     desc: Install man page to /usr/local/share/man/man1
     cmds:
-      - mkdir -p /usr/local/share/man/man1
-      - cp docs/man/tq.1 /usr/local/share/man/man1/
-      - chmod 644 /usr/local/share/man/man1/tq.1
+      - sudo mkdir -p /usr/local/share/man/man1
+      - sudo cp docs/man/tq.1 /usr/local/share/man/man1/
+      - sudo chmod 644 /usr/local/share/man/man1/tq.1
       - echo "Man page installed. Try 'man tq'"
 
   uninstall-man:
