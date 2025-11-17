@@ -29,6 +29,7 @@ var (
 	useTab       bool
 	delimiter    string
 	showStats    bool
+	showCompare  bool
 )
 
 func Execute(version, commit, date string) error {
@@ -88,7 +89,9 @@ readability and structure - perfect for LLM workflows.`,
 	rootCmd.Flags().StringVar(&delimiter, "delimiter", ",",
 		"TOON delimiter character")
 	rootCmd.Flags().BoolVar(&showStats, "stats", false,
-		"Show token usage statistics")
+		"Show token usage statistics (JSON vs TOON)")
+	rootCmd.Flags().BoolVar(&showCompare, "compare", false,
+		"Show format comparison (JSON/YAML/TOON sizes)")
 
 	return rootCmd.Execute()
 }
@@ -161,13 +164,23 @@ func run(cmd *cobra.Command, args []string) error {
 		Compact:      compact,
 		RawOutput:    rawOutput,
 		ShowStats:    showStats,
+		ShowCompare:  showCompare,
+		Slurp:        slurp,
 		MaxInputSize: 100 * 1024 * 1024, // 100MB default limit
 	})
 
 	// Read and parse input
-	data, err := conv.Read(input)
-	if err != nil {
-		return fmt.Errorf("failed to read input: %w", err)
+	var data interface{}
+	var err error
+	if nullInput {
+		// null-input mode: use null (nil) as input
+		data = nil
+	} else {
+		// Normal mode: read from input
+		data, err = conv.Read(input)
+		if err != nil {
+			return fmt.Errorf("failed to read input: %w", err)
+		}
 	}
 
 	// Execute query
