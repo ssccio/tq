@@ -39,21 +39,23 @@ jobs:
         flags: unittests
         name: codecov-umbrella
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.25.4'
-
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v6
-      with:
-        version: latest
-        args: --timeout=5m
+  # Lint job disabled - linting is handled by pre-commit hooks locally
+  # to avoid Go version compatibility issues with golangci-lint binaries
+  # lint:
+  #   name: Lint
+  #   runs-on: ubuntu-latest
+  #
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #
+  #   - name: Set up Go
+  #     uses: actions/setup-go@v5
+  #     with:
+  #       go-version: '1.25.4'
+  #
+  #   - name: Run golangci-lint
+  #     uses: golangci/golangci-lint-action@v6
+  #     with:
+  #       version: latest
+  #       args: --timeout=5m
