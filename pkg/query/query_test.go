@@ -567,3 +567,116 @@ func TestArrayUtilityFunctions(t *testing.T) {
 		}
 	})
 }
+
+func TestExecuteIf(t *testing.T) {
+	engine := New()
+
+	t.Run("basic_true", func(t *testing.T) {
+		result, err := engine.Execute("if true then 1 else 2 end", nil)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != float64(1) {
+			t.Errorf("Expected 1, got %v", result)
+		}
+	})
+
+	t.Run("basic_false", func(t *testing.T) {
+		result, err := engine.Execute("if false then 1 else 2 end", nil)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != float64(2) {
+			t.Errorf("Expected 2, got %v", result)
+		}
+	})
+
+	t.Run("condition_expression", func(t *testing.T) {
+		data := map[string]interface{}{"age": float64(30)}
+		result, err := engine.Execute("if .age > 25 then \"adult\" else \"young\" end", data)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != "adult" {
+			t.Errorf("Expected 'adult', got %v", result)
+		}
+	})
+
+	t.Run("truthy_check", func(t *testing.T) {
+		// Non-null/non-false is true
+		result, err := engine.Execute("if 123 then \"yes\" else \"no\" end", nil)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != "yes" {
+			t.Errorf("Expected 'yes', got %v", result)
+		}
+	})
+
+	t.Run("falsy_check_null", func(t *testing.T) {
+		// null is false
+		data := map[string]interface{}{"val": nil}
+		result, err := engine.Execute("if .val then \"yes\" else \"no\" end", data)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != "no" {
+			t.Errorf("Expected 'no', got %v", result)
+		}
+	})
+}
+
+func TestExecuteAlternative(t *testing.T) {
+	engine := New()
+
+	t.Run("first_truthy", func(t *testing.T) {
+		result, err := engine.Execute("1 // 2", nil)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != float64(1) {
+			t.Errorf("Expected 1, got %v", result)
+		}
+	})
+
+	t.Run("second_truthy", func(t *testing.T) {
+		result, err := engine.Execute("false // 2", nil)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != float64(2) {
+			t.Errorf("Expected 2, got %v", result)
+		}
+	})
+
+	t.Run("null_fallback", func(t *testing.T) {
+		data := map[string]interface{}{"a": nil, "b": float64(3)}
+		result, err := engine.Execute(".a // .b", data)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != float64(3) {
+			t.Errorf("Expected 3, got %v", result)
+		}
+	})
+
+	t.Run("chain", func(t *testing.T) {
+		result, err := engine.Execute("false // null // 3", nil)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != float64(3) {
+			t.Errorf("Expected 3, got %v", result)
+		}
+	})
+
+	t.Run("all_falsy", func(t *testing.T) {
+		result, err := engine.Execute("false // null", nil)
+		if err != nil {
+			t.Fatalf("Execute failed: %v", err)
+		}
+		if result != nil {
+			t.Errorf("Expected nil, got %v", result)
+		}
+	})
+}

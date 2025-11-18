@@ -37,6 +37,16 @@ func (e *Engine) executeQuery(query string, data interface{}) (interface{}, erro
 		return e.executeArrayConstruction(query, data)
 	}
 
+	// Handle if-then-else
+	if strings.HasPrefix(query, "if ") {
+		return e.executeIf(query, data)
+	}
+
+	// Handle alternative operator //
+	if strings.Contains(query, "//") {
+		return e.executeAlternative(query, data)
+	}
+
 	if strings.HasPrefix(query, "{") && strings.HasSuffix(query, "}") {
 		return e.executeObjectConstruction(query, data)
 	}
@@ -64,6 +74,11 @@ func (e *Engine) executeQuery(query string, data interface{}) (interface{}, erro
 	// Handle field access with dots
 	if strings.HasPrefix(query, ".") && !strings.Contains(query, "(") {
 		return e.executeFieldAccess(query, data)
+	}
+
+	// Handle literal values (true, false, numbers, strings)
+	if val, err := parseValue(query); err == nil {
+		return val, nil
 	}
 
 	return nil, fmt.Errorf("unsupported query: %s", query)
@@ -479,6 +494,11 @@ func splitPipe(query string) []string {
 
 func parseValue(s string) (interface{}, error) {
 	s = strings.TrimSpace(s)
+
+	// Try null
+	if s == "null" {
+		return nil, nil
+	}
 
 	// Try boolean
 	if s == "true" {
@@ -1487,4 +1507,135 @@ func (e *Engine) funcWithEntries(argsStr string, data interface{}) (interface{},
 
 	// Convert back from entries
 	return e.funcFromEntries(results)
+}
+
+func (e *Engine) executeIf(query string, data interface{}) (interface{}, error) {
+	// Format: if COND then TRUE_BRANCH else FALSE_BRANCH end
+	if !strings.HasSuffix(query, " end") {
+		return nil, fmt.Errorf("if statement must end with 'end'")
+	}
+
+	// Remove "if " and " end"
+	inner := query[3 : len(query)-4]
+
+	// Find " then "
+	thenIdx := strings.Index(inner, " then ")
+	if thenIdx == -1 {
+		return nil, fmt.Errorf("if statement missing 'then'")
+	}
+
+	condStr := strings.TrimSpace(inner[:thenIdx])
+	rest := inner[thenIdx+6:]
+
+	// Find " else "
+	// Note: This is a simple implementation and might fail with nested if-else
+	// A proper parser would be needed for nested structures
+	elseIdx := strings.LastIndex(rest, " else ")
+	if elseIdx == -1 {
+		return nil, fmt.Errorf("if statement missing 'else'")
+	}
+
+	trueBranch := strings.TrimSpace(rest[:elseIdx])
+	falseBranch := strings.TrimSpace(rest[elseIdx+6:])
+
+	// Evaluate condition
+	// We use evaluateCondition if it looks like a condition, otherwise executeQuery
+	// In jq, any value can be a condition (null/false are false, others true)
+	// For now, let's try to use evaluateCondition if it has operators, otherwise check truthiness
+	var isTrue bool
+	if strings.ContainsAny(condStr, "><=") {
+		var err error
+		isTrue, err = e.evaluateCondition(condStr, data)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		val, err := e.executeQuery(condStr, data)
+		if err != nil {
+			return nil, err
+		}
+		isTrue = isTruthy(val)
+	}
+
+	if isTrue {
+		return e.executeQuery(trueBranch, data)
+	}
+	return e.executeQuery(falseBranch, data)
+}
+
+func (e *Engine) executeAlternative(query string, data interface{}) (interface{}, error) {
+	// Split by // respecting nesting
+	parts := splitByString(query, "//")
+
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		result, err := e.executeQuery(part, data)
+
+		// If no error and result is truthy, return it
+		if err == nil && isTruthy(result) {
+			return result, nil
+		}
+		// If error, continue to next alternative?
+		// jq behavior: errors in alternatives propagate, but null/false trigger next
+		// For now, let's propagate errors
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// If all alternatives are false/null, return the last one (or null/false)
+	// Actually jq returns the last result if all are false/null
+	// But we need to re-execute the last one to get the value?
+	// We already executed it in the loop.
+	// Wait, if we are here, it means the last one was also false/null (or empty parts)
+
+	if len(parts) > 0 {
+		// Re-execute last part to return its value
+		return e.executeQuery(strings.TrimSpace(parts[len(parts)-1]), data)
+	}
+
+	return nil, nil
+}
+
+func isTruthy(val interface{}) bool {
+	if val == nil {
+		return false
+	}
+	if b, ok := val.(bool); ok {
+		return b
+	}
+	return true
+}
+
+// splitByString splits a string by a separator, respecting nested structures.
+func splitByString(s, sep string) []string {
+	var parts []string
+	var current strings.Builder
+	depth := 0
+	sepLen := len(sep)
+
+	for i := 0; i < len(s); i++ {
+		// Check for separator
+		if depth == 0 && i+sepLen <= len(s) && s[i:i+sepLen] == sep {
+			parts = append(parts, current.String())
+			current.Reset()
+			i += sepLen - 1 // Skip separator
+			continue
+		}
+
+		ch := rune(s[i])
+		switch ch {
+		case '(', '[', '{':
+			depth++
+		case ')', ']', '}':
+			depth--
+		}
+		current.WriteRune(ch)
+	}
+
+	if current.Len() > 0 {
+		parts = append(parts, current.String())
+	}
+
+	return parts
 }

@@ -62,13 +62,13 @@
 The query engine now has comprehensive built-in function support. Advanced features still to implement:
 
 - [ ] Advanced filters: `reduce`, `foreach`, `until`, `limit`
-- [ ] String functions: `ltrimstr`, `rtrimstr`, `tostring`, `tonumber`
-- [ ] Object functions: `with_entries`, `from_entries`, `to_entries`
+- [x] String functions: `ltrimstr`, `rtrimstr`, `tostring`, `tonumber`
+- [x] Object functions: `with_entries`, `from_entries`, `to_entries`
 - [ ] Object/array construction with complex expressions
 - [ ] Recursive descent (`..`)
 - [ ] Optional operator (`?`)
-- [ ] Alternative operator (`//`)
-- [ ] Complex conditionals (`if-then-else`)
+- [x] Alternative operator (`//`)
+- [x] Complex conditionals (`if-then-else`)
 - [ ] Try-catch error handling
 
 ### Missing CLI Features
